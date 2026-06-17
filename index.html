@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎈 童谣三合一 · 读读童谣和儿歌</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+      background: #f9f0e1;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .app-wrapper {
+      max-width: 1100px;
+      width: 100%;
+      background: #fff9ef;
+      border-radius: 60px 60px 40px 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      padding: 24px 28px 34px;
+      border: 3px solid #f7e4cc;
+    }
+    h1 {
+      font-size: 2.6rem;
+      color: #a65336;
+      text-shadow: 4px 4px 0 #fbd5a2;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    h1 small {
+      font-size: 1.1rem;
+      background: #d9b382;
+      color: #2d1f13;
+      padding: 0 22px;
+      border-radius: 60px;
+      font-weight: 400;
+      box-shadow: inset 0 -2px 0 #b28b64;
+    }
+    .tab-bar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 18px 0 20px;
+    }
+    .tab-btn {
+      background: #e7d5be;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #3e2a18;
+      box-shadow: 0 4px 0 #b28b64;
+      cursor: pointer;
+      transition: 0.07s linear;
+      border: 2px solid #fef3e0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tab-btn.active {
+      background: #ffd79c;
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #b28b64;
+    }
+    .tab-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b28b64; }
+    .game-panel {
+      background: #fffcf2;
+      border-radius: 48px;
+      padding: 22px 20px 28px;
+      box-shadow: inset 0 -6px 0 #d9b382, 0 12px 24px rgba(100,70,40,0.1);
+      border: 2px solid #f7e5cc;
+      min-height: 460px;
+    }
+    .hidden { display: none !important; }
+
+    /* ----- 转盘样式 ----- */
+    .wheel-area { text-align: center; }
+    .wheel-btn {
+      background: #ffb882;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 60px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2d1f13;
+      box-shadow: 0 8px 0 #b28b64;
+      cursor: pointer;
+      transition: 0.07s linear;
+      margin: 6px 0 16px;
+      border: 2px solid #f7e5cc;
+    }
+    .wheel-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #b28b64; }
+    .wheel-result {
+      font-size: 2.4rem;
+      font-weight: 700;
+      background: #efe3d2;
+      padding: 12px 20px;
+      border-radius: 60px;
+      display: inline-block;
+      margin: 8px 0 12px;
+    }
+    .wheel-q-box {
+      background: #f6efe4;
+      border-radius: 40px;
+      padding: 18px 22px;
+      margin: 12px 0;
+      border: 2px solid #e6d3bc;
+    }
+    .wheel-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .wheel-options .opt {
+      background: #fcf6ed;
+      padding: 10px 18px;
+      border-radius: 60px;
+      border: 2px solid #dcc9b2;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.1s;
+      box-shadow: 0 3px 0 #c6ad8e;
+    }
+    .wheel-options .opt:hover { background: #efe1cf; }
+    .wheel-options .opt.correct { background: #b7d7b0; border-color: #3f7840; box-shadow: 0 3px 0 #2a5a2b; }
+    .wheel-options .opt.wrong { background: #f4bcbc; border-color: #b34a4a; box-shadow: 0 3px 0 #7f3333; }
+    .wheel-options .opt.disabled { pointer-events: none; opacity: 0.7; }
+    .wheel-score { font-size: 1.5rem; font-weight: 600; margin-top: 10px; }
+
+    /* ----- 消消乐样式 (修复版) ----- */
+    .match-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .match-col {
+      flex: 1 1 300px;
+      min-width: 240px;
+      background: #f6efe4;
+      border-radius: 40px;
+      padding: 12px 10px;
+      border: 2px solid #e6d3bc;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    .match-col h3 {
+      text-align: center;
+      background: #dcc9b2;
+      border-radius: 60px;
+      padding: 6px 0;
+      font-size: 1.0rem;
+      color: #2d1f13;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .match-item {
+      background: #fffcf2;
+      margin: 6px 0;
+      padding: 8px 14px;
+      border-radius: 60px;
+      border: 2px solid #d5bea2;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.1s;
+      text-align: center;
+      box-shadow: 0 2px 0 #b28b64;
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+    .match-item.selected { background: #ffe3b5; border-color: #b28b64; }
+    .match-item.matched { background: #b7d7b0; border-color: #3f7840; opacity: 0.5; pointer-events: none; text-decoration: line-through; }
+    .match-item.wrong-pick { background: #f4bcbc; border-color: #b34a4a; }
+    .match-info { display: flex; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    /* ----- 竞速赛样式 ----- */
+    .race-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: #efe3d2;
+      padding: 12px 24px;
+      border-radius: 60px;
+      margin-bottom: 16px;
+    }
+    .race-q-box {
+      background: #f6efe4;
+      border-radius: 40px;
+      padding: 18px 22px;
+      border: 2px solid #e6d3bc;
+    }
+    .race-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .race-options .opt {
+      background: #fcf6ed;
+      padding: 10px 18px;
+      border-radius: 60px;
+      border: 2px solid #dcc9b2;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 3px 0 #c6ad8e;
+      transition: 0.05s;
+    }
+    .race-options .opt:active { transform: scale(0.98); }
+    .race-options .opt.correct { background: #b7d7b0; border-color: #3f7840; box-shadow: 0 3px 0 #2a5a2b; }
+    .race-options .opt.wrong { background: #f4bcbc; border-color: #b34a4a; box-shadow: 0 3px 0 #7f3333; }
+    .race-options .opt.disabled { pointer-events: none; opacity: 0.6; }
+    .race-btn {
+      background: #ffb882;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 60px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      box-shadow: 0 6px 0 #b28b64;
+      cursor: pointer;
+      margin: 12px 0 4px;
+      border: 2px solid #f7e5cc;
+    }
+    .race-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #b28b64; }
+    .race-btn:disabled { opacity: 0.5; transform: translateY(4px); box-shadow: 0 2px 0 #b28b64; pointer-events: none; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .tab-btn { padding: 8px 16px; font-size: 1.0rem; }
+      .match-col { flex: 1 1 180px; min-width: 140px; max-height: 380px; }
+      .match-item { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <h1>
+    📚 童谣三合一
+    <small>读读童谣和儿歌·三</small>
+  </h1>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="wheel">🎡 大转盘</button>
+    <button class="tab-btn" data-tab="match">🧩 消消乐</button>
+    <button class="tab-btn" data-tab="race">⏱️ 竞速赛</button>
+  </div>
+
+  <!-- 面板容器 -->
+  <div class="game-panel" id="panelContainer">
+    <!-- 转盘 -->
+    <div id="wheelPanel" class="wheel-area">
+      <button class="wheel-btn" id="spinBtn">🎡 转动转盘</button>
+      <div class="wheel-result" id="wheelResult">🎯 点击转盘</div>
+      <div class="wheel-q-box" id="wheelQBox">
+        <div id="wheelQTitle" style="font-weight:600;">《帆船》</div>
+        <div id="wheelQText">（  ）吹帆船向前走</div>
+        <div class="wheel-options" id="wheelOptions"></div>
+      </div>
+      <div class="wheel-score">⭐ 得分：<span id="wheelScore">0</span> / 27</div>
+    </div>
+
+    <!-- 消消乐 (修复版：左侧显示完整题目) -->
+    <div id="matchPanel" class="hidden">
+      <div class="match-grid" id="matchGrid">
+        <div class="match-col" id="leftCol"><h3>📖 题目（点击选择）</h3></div>
+        <div class="match-col" id="rightCol"><h3>✅ 正确答案（点击配对）</h3></div>
+      </div>
+      <div class="match-info">
+        <span>✅ 已配对：<span id="matchCount">0</span> / 27</span>
+        <span id="matchMsg">💡 点击左侧题目，再点右侧答案</span>
+        <button class="wheel-btn" style="padding:8px 24px; font-size:1.0rem;" id="resetMatchBtn">🔄 重新配对</button>
+      </div>
+    </div>
+
+    <!-- 竞速赛 -->
+    <div id="racePanel" class="hidden">
+      <div class="race-header">
+        <span>⏱️ <span id="raceTimer">60</span>s</span>
+        <span>⭐ <span id="raceScore">0</span></span>
+      </div>
+      <div class="race-q-box" id="raceQBox">
+        <div id="raceQTitle" style="font-weight:600;">《帆船》</div>
+        <div id="raceQText">（  ）吹帆船向前走</div>
+        <div class="race-options" id="raceOptions"></div>
+      </div>
+      <button class="race-btn" id="raceStartBtn">🚀 开始挑战</button>
+      <div style="margin-top:10px; font-weight:500;" id="raceStatus">点击“开始挑战”</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---------- 全部27道题 (根据最新文档校正) ----------
+  const QUESTIONS = [
+    { title: "《帆船》", text: "（  ）吹帆船向前走", options: ["① 云", "② 风"], correct: 1 },
+    { title: "《狗和猴》", text: "狗和猴来到（  ）两碰头", options: ["① 桥心", "② 桥头"], correct: 0 },
+    { title: "《屋里点个灯》", text: "屋里的灯为什么会灭掉？", options: ["① 停电了", "② 风吹的", "③ 妹妹吹灭的"], correct: 1 },
+    { title: "《猫咬帽》", text: "小猫看见（  ），就要咬苗苗的帽子。", options: ["① 帽上有只猫", "② 帽上有条鱼", "③ 帽上有小草"], correct: 0 },
+    { title: "《小弟吃梨》", text: "小弟咬一口，梨子（  ）", options: ["① 酸溜溜", "② 甜蜜蜜", "③ 香喷喷"], correct: 1 },
+    { title: "《华华画瓜》", text: "华华先画的是（  ）", options: ["① 瓜", "② 花", "③ 瓜藤"], correct: 1 },
+    { title: "《红薯和葫芦》", text: "葫芦是长在（  ）的。", options: ["① 架上", "② 地里"], correct: 0 },
+    { title: "《小河和小鹅》", text: "小河和小娥在干什么？（  ）", options: ["① 拾螺壳", "② 抓小鹅", "③ 玩游戏"], correct: 0 },
+    { title: "《西西买席》", text: "西西上街没有买什么东西？（  ）", options: ["① 梨", "② 席", "③ 鸡蛋", "④ 桔子"], correct: 3 },
+    { title: "《看花狗》", text: "我看花狗的时候（  ）", options: ["① 花筐扣", "② 摔倒了"], correct: 0 },
+    { title: "《小荷赶鹅》", text: "船前有（  ）只鹅", options: ["① 55", "② 45", "③ 44"], correct: 2 },
+    { title: "《粮囤子》", text: "粮囤子是用来（  ）", options: ["① 装蔬菜", "② 装粮食", "③ 装稻草"], correct: 1 },
+    { title: "《荷花和黑鸭》", text: "荷花是（  ）色的，鸭子是（  ）色的。", options: ["① 白 / 黑", "② 黑 / 白", "③ 粉 / 黑"], correct: 0 },
+    { title: "《霞和鸭》", text: "儿歌中的霞是（  ）霞", options: ["① 五彩", "② 红", "③ 粉"], correct: 0 },
+    { title: "《瓦和马》", text: "瓦掉到了（  ）", options: ["① 地上", "② 门上", "③ 马背上"], correct: 2 },
+    { title: "《花花追瓜》", text: "瓜瓜滚下坡后，（  ）去追瓜", options: ["① 妈妈", "② 花花", "③ 妈妈和花花"], correct: 1 },
+    { title: "《颠倒歌》", text: "南北大街（  ）走", options: ["① 东西", "② 东南", "③ 西北"], correct: 0 },
+    { title: "《鼓和虎》", text: "鼓破了，是用（  ）补的", options: ["① 皮", "② 布", "③ 草"], correct: 1 },
+    { title: "《大老虎和小白兔》", text: "老虎最后抓到小白兔了吗？（  ）", options: ["① 有", "② 没有"], correct: 1 },
+    { title: "《毛毛和涛涛》", text: "毛毛和涛涛比赛，毛毛的（  ）更厉害", options: ["① 跑步", "② 跳高", "③ 跳远"], correct: 0 },
+    { title: "《吃西瓜》", text: "儿歌中的西瓜是我和（  ）一起吃完的。", options: ["① 小猫", "② 巴儿狗", "③ 姐姐"], correct: 1 },
+    { title: "《小媳妇坐花轿》", text: "小媳妇被（  ）吓得满街跑。", options: ["① 闭门炮", "② 小狗", "③ 小猫"], correct: 0 },
+    { title: "《上山坡》", text: "我到山坡上（  ）", options: ["① 看月亮", "② 割草喂羊羔", "③ 砍树"], correct: 1 },
+    { title: "《赶集》", text: "小巴儿狗去赶集吃了（  ）", options: ["① 杏子", "② 枣子", "③ 桃子"], correct: 1 },
+    { title: "《贴窗花》", text: "读了儿歌，我知道（  ）节要贴窗花。", options: ["① 春节", "② 端午节", "③ 元宵节"], correct: 0 },
+    { title: "《两只羊》", text: "儿歌中的两只羊（  ）", options: ["① 走过了桥", "② 掉进了河里"], correct: 1 },
+    { title: "《丢手绢》", text: "要把手绢放到（  ）", options: ["① 小朋友前面", "② 小朋友后面"], correct: 1 }
+  ];
+
+  // ----- DOM refs -----
+  const panel = document.getElementById('panelContainer');
+  const wheelPanel = document.getElementById('wheelPanel');
+  const matchPanel = document.getElementById('matchPanel');
+  const racePanel = document.getElementById('racePanel');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+
+  // ----- 切换标签 -----
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const tab = this.dataset.tab;
+      wheelPanel.classList.toggle('hidden', tab !== 'wheel');
+      matchPanel.classList.toggle('hidden', tab !== 'match');
+      racePanel.classList.toggle('hidden', tab !== 'race');
+      if (tab === 'match') renderMatch();
+      if (tab === 'race') renderRace();
+    });
+  });
+
+  // ========== 1. 转盘 ==========
+  let wheelAnswered = new Array(27).fill(false);
+  let wheelScore = 0;
+  let wheelCurrent = 0;
+
+  const spinBtn = document.getElementById('spinBtn');
+  const wheelResult = document.getElementById('wheelResult');
+  const wheelQTitle = document.getElementById('wheelQTitle');
+  const wheelQText = document.getElementById('wheelQText');
+  const wheelOptions = document.getElementById('wheelOptions');
+  const wheelScoreSpan = document.getElementById('wheelScore');
+
+  function renderWheelQuestion(index) {
+    const q = QUESTIONS[index];
+    wheelQTitle.textContent = q.title;
+    wheelQText.textContent = q.text;
+    wheelOptions.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const div = document.createElement('div');
+      div.className = 'opt';
+      div.textContent = opt;
+      div.dataset.idx = idx;
+      div.addEventListener('click', () => handleWheelClick(index, idx));
+      wheelOptions.appendChild(div);
+    });
+    if (wheelAnswered[index]) {
+      document.querySelectorAll('#wheelOptions .opt').forEach(el => el.classList.add('disabled'));
+      wheelResult.textContent = '✅ 本题已答';
+    } else {
+      wheelResult.textContent = '📌 请选择答案';
+    }
+    wheelScoreSpan.textContent = wheelScore;
+  }
+
+  function handleWheelClick(qIndex, optIdx) {
+    if (wheelAnswered[qIndex]) return;
+    const q = QUESTIONS[qIndex];
+    const opts = document.querySelectorAll('#wheelOptions .opt');
+    opts.forEach(el => el.classList.add('disabled'));
+    const isCorrect = (optIdx === q.correct);
+    opts.forEach((el, idx) => {
+      if (idx === q.correct) el.classList.add('correct');
+      else if (idx === optIdx && !isCorrect) el.classList.add('wrong');
+    });
+    wheelAnswered[qIndex] = true;
+    if (isCorrect) { wheelScore++; wheelScoreSpan.textContent = wheelScore; }
+    wheelResult.textContent = isCorrect ? '✅ 正确！ +1分' : `❌ 正确答案：${q.options[q.correct]}`;
+    if (wheelAnswered.every(v => v === true)) {
+      wheelResult.textContent = `🎉 全部完成！ 得分：${wheelScore}/27`;
+    }
+  }
+
+  spinBtn.addEventListener('click', function() {
+    const allDone = wheelAnswered.every(v => v === true);
+    if (allDone) {
+      wheelResult.textContent = '🎯 所有题目已答完！点击"重置转盘"可重新开始';
+      return;
+    }
+    const unAnswered = [];
+    wheelAnswered.forEach((v, i) => { if (!v) unAnswered.push(i); });
+    if (unAnswered.length === 0) return;
+    const randomIdx = unAnswered[Math.floor(Math.random() * unAnswered.length)];
+    wheelCurrent = randomIdx;
+    renderWheelQuestion(randomIdx);
+    wheelResult.textContent = `🎯 第 ${randomIdx+1} 题`;
+  });
+
+  function resetWheel() {
+    wheelAnswered = new Array(27).fill(false);
+    wheelScore = 0;
+    wheelScoreSpan.textContent = '0';
+    wheelResult.textContent = '🎯 点击转盘';
+    wheelCurrent = 0;
+    renderWheelQuestion(0);
+  }
+  window.resetWheel = resetWheel;
+
+  // ========== 2. 消消乐 (修复版：左侧显示完整题目) ==========
+  let matchState = new Array(27).fill(false);
+  let leftSelected = null;
+  let matchPairs = 0;
+  const leftCol = document.getElementById('leftCol');
+  const rightCol = document.getElementById('rightCol');
+  const matchCountSpan = document.getElementById('matchCount');
+  const matchMsg = document.getElementById('matchMsg');
+
+  function renderMatch() {
+    // 左侧：显示完整题目（标题 + 题干）
+    const leftItems = QUESTIONS.map((q, i) => ({ 
+      idx: i, 
+      label: `${q.title} ${q.text}` 
+    }));
+    // 右侧：显示正确答案（只显示正确的那一项）
+    const rightItems = QUESTIONS.map((q, i) => ({ 
+      idx: i, 
+      label: q.options[q.correct] 
+    }));
+
+    shuffleArray(leftItems);
+    shuffleArray(rightItems);
+
+    leftCol.innerHTML = '<h3>📖 题目（点击选择）</h3>';
+    rightCol.innerHTML = '<h3>✅ 正确答案（点击配对）</h3>';
+
+    leftItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'match-item';
+      if (matchState[item.idx]) div.classList.add('matched');
+      div.textContent = item.label;
+      div.dataset.idx = item.idx;
+      div.dataset.side = 'left';
+      div.addEventListener('click', () => handleMatchClick('left', item.idx));
+      leftCol.appendChild(div);
+    });
+
+    rightItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'match-item';
+      if (matchState[item.idx]) div.classList.add('matched');
+      div.textContent = item.label;
+      div.dataset.idx = item.idx;
+      div.dataset.side = 'right';
+      div.addEventListener('click', () => handleMatchClick('right', item.idx));
+      rightCol.appendChild(div);
+    });
+
+    matchPairs = matchState.filter(v => v).length;
+    matchCountSpan.textContent = matchPairs;
+    if (matchPairs === 27) matchMsg.textContent = '🎉 全部配对成功！太棒啦！';
+    else matchMsg.textContent = '💡 点击左侧题目，再点右侧答案';
+    leftSelected = null;
+  }
+
+  function handleMatchClick(side, idx) {
+    if (matchState[idx]) return;
+    if (side === 'left') {
+      document.querySelectorAll('#leftCol .match-item').forEach(el => el.classList.remove('selected'));
+      const el = document.querySelector(`#leftCol .match-item[data-idx="${idx}"]`);
+      if (el) el.classList.add('selected');
+      leftSelected = idx;
+      const q = QUESTIONS[idx];
+      matchMsg.textContent = `📌 已选：${q.title} ${q.text} → 请点击右侧对应答案`;
+    } else if (side === 'right') {
+      if (leftSelected === null) {
+        matchMsg.textContent = '⚠️ 请先在左侧点击一道题目！';
+        return;
+      }
+      const leftIdx = leftSelected;
+      if (leftIdx === idx) {
+        matchState[leftIdx] = true;
+        matchPairs++;
+        matchCountSpan.textContent = matchPairs;
+        const leftEl = document.querySelector(`#leftCol .match-item[data-idx="${leftIdx}"]`);
+        const rightEl = document.querySelector(`#rightCol .match-item[data-idx="${idx}"]`);
+        if (leftEl) { leftEl.classList.remove('selected'); leftEl.classList.add('matched'); }
+        if (rightEl) rightEl.classList.add('matched');
+        matchMsg.textContent = '✅ 配对正确！继续～';
+        leftSelected = null;
+        if (matchPairs === 27) matchMsg.textContent = '🎉 全部配对成功！太棒啦！';
+      } else {
+        const rightEl = document.querySelector(`#rightCol .match-item[data-idx="${idx}"]`);
+        if (rightEl) {
+          rightEl.classList.add('wrong-pick');
+          setTimeout(() => rightEl.classList.remove('wrong-pick'), 400);
+        }
+        const q = QUESTIONS[leftIdx];
+        matchMsg.textContent = `❌ 配对错误！ ${q.title} 的正确答案是：${q.options[q.correct]}`;
+        document.querySelectorAll('#leftCol .match-item').forEach(el => el.classList.remove('selected'));
+        leftSelected = null;
+      }
+    }
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  document.getElementById('resetMatchBtn').addEventListener('click', function() {
+    matchState = new Array(27).fill(false);
+    leftSelected = null;
+    matchPairs = 0;
+    renderMatch();
+  });
+
+  // ========== 3. 竞速赛 ==========
+  let raceTimer = 60;
+  let raceScore = 0;
+  let raceAnswered = new Array(27).fill(false);
+  let raceCurrentIdx = 0;
+  let raceInterval = null;
+  let raceRunning = false;
+  let raceLock = false;
+
+  const raceTimerSpan = document.getElementById('raceTimer');
+  const raceScoreSpan = document.getElementById('raceScore');
+  const raceQTitle = document.getElementById('raceQTitle');
+  const raceQText = document.getElementById('raceQText');
+  const raceOptions = document.getElementById('raceOptions');
+  const raceStartBtn = document.getElementById('raceStartBtn');
+  const raceStatus = document.getElementById('raceStatus');
+
+  function renderRaceQuestion(index) {
+    if (index >= 27) return;
+    const q = QUESTIONS[index];
+    raceQTitle.textContent = q.title;
+    raceQText.textContent = q.text;
+    raceOptions.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const div = document.createElement('div');
+      div.className = 'opt';
+      div.textContent = opt;
+      div.dataset.idx = idx;
+      div.addEventListener('click', () => handleRaceClick(index, idx));
+      raceOptions.appendChild(div);
+    });
+    if (raceAnswered[index]) {
+      document.querySelectorAll('#raceOptions .opt').forEach(el => el.classList.add('disabled'));
+    }
+  }
+
+  function handleRaceClick(qIndex, optIdx) {
+    if (!raceRunning || raceLock) return;
+    if (raceAnswered[qIndex]) return;
+    const q = QUESTIONS[qIndex];
+    const opts = document.querySelectorAll('#raceOptions .opt');
+    opts.forEach(el => el.classList.add('disabled'));
+    const isCorrect = (optIdx === q.correct);
+    opts.forEach((el, idx) => {
+      if (idx === q.correct) el.classList.add('correct');
+      else if (idx === optIdx && !isCorrect) el.classList.add('wrong');
+    });
+    raceAnswered[qIndex] = true;
+    if (isCorrect) { raceScore += 10; raceScoreSpan.textContent = raceScore; }
+    raceStatus.textContent = isCorrect ? '✅ +10分' : `❌ 正确答案：${q.options[q.correct]}`;
+    raceLock = true;
+    setTimeout(() => {
+      raceLock = false;
+      let next = -1;
+      for (let i = 0; i < 27; i++) {
+        if (!raceAnswered[i]) { next = i; break; }
+      }
+      if (next !== -1) {
+        raceCurrentIdx = next;
+        renderRaceQuestion(next);
+        raceStatus.textContent = `⏳ 第 ${next+1} 题`;
+      } else {
+        raceStatus.textContent = `🎉 全部答完！ 得分：${raceScore}`;
+        stopRace();
+      }
+    }, 400);
+  }
+
+  function startRace() {
+    if (raceRunning) return;
+    raceAnswered = new Array(27).fill(false);
+    raceScore = 0;
+    raceScoreSpan.textContent = '0';
+    raceTimer = 60;
+    raceTimerSpan.textContent = '60';
+    raceRunning = true;
+    raceStartBtn.disabled = true;
+    raceStartBtn.textContent = '⏳ 进行中...';
+    raceStatus.textContent = '⏳ 倒计时开始！';
+    raceCurrentIdx = 0;
+    renderRaceQuestion(0);
+    if (raceInterval) clearInterval(raceInterval);
+    raceInterval = setInterval(() => {
+      raceTimer--;
+      raceTimerSpan.textContent = raceTimer;
+      if (raceTimer <= 0) {
+        stopRace();
+        raceStatus.textContent = `⏰ 时间到！ 得分：${raceScore}`;
+      }
+    }, 1000);
+  }
+
+  function stopRace() {
+    raceRunning = false;
+    if (raceInterval) { clearInterval(raceInterval); raceInterval = null; }
+    raceStartBtn.disabled = false;
+    raceStartBtn.textContent = '🔄 再来一局';
+    document.querySelectorAll('#raceOptions .opt').forEach(el => el.classList.add('disabled'));
+  }
+
+  raceStartBtn.addEventListener('click', function() {
+    if (this.textContent === '🔄 再来一局') {
+      raceAnswered = new Array(27).fill(false);
+      raceScore = 0;
+      raceScoreSpan.textContent = '0';
+      raceTimer = 60;
+      raceTimerSpan.textContent = '60';
+      raceRunning = false;
+      if (raceInterval) clearInterval(raceInterval);
+      raceStartBtn.textContent = '🚀 开始挑战';
+      raceStartBtn.disabled = false;
+      raceStatus.textContent = '点击“开始挑战”';
+      renderRaceQuestion(0);
+      return;
+    }
+    startRace();
+  });
+
+  // ========== 初始化 ==========
+  resetWheel();
+  renderMatch();
+  renderRaceQuestion(0);
+  raceStatus.textContent = '点击“开始挑战”';
+
+  // 转盘重置按钮
+  const resetWheelBtn = document.createElement('button');
+  resetWheelBtn.textContent = '🔄 重置转盘';
+  resetWheelBtn.className = 'wheel-btn';
+  resetWheelBtn.style.padding = '8px 24px'; resetWheelBtn.style.fontSize = '1.0rem';
+  resetWheelBtn.addEventListener('click', resetWheel);
+  document.querySelector('#wheelPanel .wheel-score').after(resetWheelBtn);
+</script>
+</body>
+</html>
